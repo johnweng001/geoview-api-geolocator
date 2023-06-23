@@ -207,7 +207,7 @@ function router_extends() {
 /**
  * Actions represent the type of change to a location value.
  */
-var router_Action;
+var Action;
 
 (function (Action) {
   /**
@@ -231,7 +231,7 @@ var router_Action;
    */
 
   Action["Replace"] = "REPLACE";
-})(router_Action || (router_Action = {}));
+})(Action || (Action = {}));
 
 const PopStateEventType = "popstate";
 /**
@@ -253,7 +253,7 @@ function router_createMemoryHistory(options) {
 
   entries = initialEntries.map((entry, index) => createMemoryLocation(entry, typeof entry === "string" ? null : entry.state, index === 0 ? "default" : undefined));
   let index = clampIndex(initialIndex == null ? entries.length - 1 : initialIndex);
-  let action = router_Action.Pop;
+  let action = Action.Pop;
   let listener = null;
 
   function clampIndex(n) {
@@ -298,7 +298,7 @@ function router_createMemoryHistory(options) {
     },
 
     encodeLocation(to) {
-      let path = typeof to === "string" ? router_parsePath(to) : to;
+      let path = typeof to === "string" ? parsePath(to) : to;
       return {
         pathname: path.pathname || "",
         search: path.search || "",
@@ -307,7 +307,7 @@ function router_createMemoryHistory(options) {
     },
 
     push(to, state) {
-      action = router_Action.Push;
+      action = Action.Push;
       let nextLocation = createMemoryLocation(to, state);
       index += 1;
       entries.splice(index, entries.length, nextLocation);
@@ -322,7 +322,7 @@ function router_createMemoryHistory(options) {
     },
 
     replace(to, state) {
-      action = router_Action.Replace;
+      action = Action.Replace;
       let nextLocation = createMemoryLocation(to, state);
       entries[index] = nextLocation;
 
@@ -336,7 +336,7 @@ function router_createMemoryHistory(options) {
     },
 
     go(delta) {
-      action = router_Action.Pop;
+      action = Action.Pop;
       let nextIndex = clampIndex(index + delta);
       let nextLocation = entries[nextIndex];
       index = nextIndex;
@@ -412,7 +412,7 @@ function router_createHashHistory(options) {
       pathname = "/",
       search = "",
       hash = ""
-    } = router_parsePath(window.location.hash.substr(1));
+    } = parsePath(window.location.hash.substr(1));
     return createLocation("", {
       pathname,
       search,
@@ -490,7 +490,7 @@ function createLocation(current, to, state, key) {
     pathname: typeof current === "string" ? current : current.pathname,
     search: "",
     hash: ""
-  }, typeof to === "string" ? router_parsePath(to) : to, {
+  }, typeof to === "string" ? parsePath(to) : to, {
     state,
     // TODO: This could be cleaned up.  push/replace should probably just take
     // full Locations now and avoid the need to run through this flow at all
@@ -519,7 +519,7 @@ function router_createPath(_ref) {
  * Parses a string URL path into its separate pathname, search, and hash components.
  */
 
-function router_parsePath(path) {
+function parsePath(path) {
   let parsedPath = {};
 
   if (path) {
@@ -555,7 +555,7 @@ function getUrlBasedHistory(getLocation, createHref, validateLocation, options) 
     v5Compat = false
   } = options;
   let globalHistory = window.history;
-  let action = router_Action.Pop;
+  let action = Action.Pop;
   let listener = null;
   let index = getIndex(); // Index should only be null when we initialize. If not, it's because the
   // user called history.pushState or history.replaceState directly, in which
@@ -576,7 +576,7 @@ function getUrlBasedHistory(getLocation, createHref, validateLocation, options) 
   }
 
   function handlePop() {
-    action = router_Action.Pop;
+    action = Action.Pop;
     let nextIndex = getIndex();
     let delta = nextIndex == null ? null : nextIndex - index;
     index = nextIndex;
@@ -591,7 +591,7 @@ function getUrlBasedHistory(getLocation, createHref, validateLocation, options) 
   }
 
   function push(to, state) {
-    action = router_Action.Push;
+    action = Action.Push;
     let location = createLocation(history.location, to, state);
     if (validateLocation) validateLocation(location, to);
     index = getIndex() + 1;
@@ -616,7 +616,7 @@ function getUrlBasedHistory(getLocation, createHref, validateLocation, options) 
   }
 
   function replace(to, state) {
-    action = router_Action.Replace;
+    action = Action.Replace;
     let location = createLocation(history.location, to, state);
     if (validateLocation) validateLocation(location, to);
     index = getIndex();
@@ -753,12 +753,12 @@ function convertRoutesToDataRoutes(routes, mapRouteProperties, parentPath, manif
  * @see https://reactrouter.com/utils/match-routes
  */
 
-function router_matchRoutes(routes, locationArg, basename) {
+function matchRoutes(routes, locationArg, basename) {
   if (basename === void 0) {
     basename = "/";
   }
 
-  let location = typeof locationArg === "string" ? router_parsePath(locationArg) : locationArg;
+  let location = typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
   let pathname = router_stripBasename(location.pathname || "/", basename);
 
   if (pathname == null) {
@@ -907,7 +907,7 @@ const dynamicSegmentValue = 3;
 const indexRouteValue = 2;
 const emptySegmentValue = 1;
 const staticSegmentValue = 10;
-const splatPenalty = (/* unused pure expression or super */ null && (-2));
+const splatPenalty = -2;
 
 const isSplat = s => s === "*";
 
@@ -1164,7 +1164,7 @@ function resolvePath(to, fromPathname) {
     pathname: toPathname,
     search = "",
     hash = ""
-  } = typeof to === "string" ? router_parsePath(to) : to;
+  } = typeof to === "string" ? parsePath(to) : to;
   let pathname = toPathname ? toPathname.startsWith("/") ? toPathname : resolvePathname(toPathname, fromPathname) : fromPathname;
   return {
     pathname,
@@ -1230,7 +1230,7 @@ function router_resolveTo(toArg, routePathnames, locationPathname, isPathRelativ
   let to;
 
   if (typeof toArg === "string") {
-    to = router_parsePath(toArg);
+    to = parsePath(toArg);
   } else {
     to = router_extends({}, toArg);
     invariant(!to.pathname || !to.pathname.includes("?"), getInvalidPathError("?", "pathname", "search", to));
@@ -1291,7 +1291,7 @@ function router_resolveTo(toArg, routePathnames, locationPathname, isPathRelativ
 
 function getToPathname(to) {
   // Empty strings should be treated the same as / paths
-  return to === "" || to.pathname === "" ? "/" : typeof to === "string" ? router_parsePath(to).pathname : to.pathname;
+  return to === "" || to.pathname === "" ? "/" : typeof to === "string" ? parsePath(to).pathname : to.pathname;
 }
 /**
  * @private
@@ -1556,7 +1556,7 @@ class router_ErrorResponse {
  * Response thrown from an action/loader
  */
 
-function router_isRouteErrorResponse(error) {
+function isRouteErrorResponse(error) {
   return error != null && typeof error.status === "number" && typeof error.statusText === "string" && typeof error.internal === "boolean" && "data" in error;
 }
 
@@ -1650,7 +1650,7 @@ function router_createRouter(init) {
   // SSR did the initial scroll restoration.
 
   let initialScrollRestored = init.hydrationData != null;
-  let initialMatches = router_matchRoutes(dataRoutes, init.history.location, basename);
+  let initialMatches = matchRoutes(dataRoutes, init.history.location, basename);
   let initialErrors = null;
 
   if (initialMatches == null) {
@@ -1692,7 +1692,7 @@ function router_createRouter(init) {
   }; // -- Stateful internal variables to manage navigations --
   // Current navigation in progress (to be committed in completeNavigation)
 
-  let pendingAction = router_Action.Pop; // Should the current navigation prevent the scroll reset if scroll cannot
+  let pendingAction = Action.Pop; // Should the current navigation prevent the scroll reset if scroll cannot
   // be restored?
 
   let pendingPreventScrollReset = false; // AbortController for the active navigation
@@ -1803,7 +1803,7 @@ function router_createRouter(init) {
     // UI for SSR'd apps
 
     if (!state.initialized) {
-      startNavigation(router_Action.Pop, state.location);
+      startNavigation(Action.Pop, state.location);
     }
 
     return router;
@@ -1894,14 +1894,14 @@ function router_createRouter(init) {
       blockers: new Map(state.blockers)
     }));
 
-    if (isUninterruptedRevalidation) ; else if (pendingAction === router_Action.Pop) ; else if (pendingAction === router_Action.Push) {
+    if (isUninterruptedRevalidation) ; else if (pendingAction === Action.Pop) ; else if (pendingAction === Action.Push) {
       init.history.push(location, location.state);
-    } else if (pendingAction === router_Action.Replace) {
+    } else if (pendingAction === Action.Replace) {
       init.history.replace(location, location.state);
     } // Reset stateful navigation vars
 
 
-    pendingAction = router_Action.Pop;
+    pendingAction = Action.Pop;
     pendingPreventScrollReset = false;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
@@ -1932,16 +1932,16 @@ function router_createRouter(init) {
 
     nextLocation = router_extends({}, nextLocation, init.history.encodeLocation(nextLocation));
     let userReplace = opts && opts.replace != null ? opts.replace : undefined;
-    let historyAction = router_Action.Push;
+    let historyAction = Action.Push;
 
     if (userReplace === true) {
-      historyAction = router_Action.Replace;
+      historyAction = Action.Replace;
     } else if (userReplace === false) ; else if (submission != null && isMutationMethod(submission.formMethod) && submission.formAction === state.location.pathname + state.location.search) {
       // By default on submissions to the current location we REPLACE so that
       // users don't have to double-click the back button to get to the prior
       // location.  If the user redirects to a different location from the
       // action/loader this will be ignored and the redirect will be a PUSH
-      historyAction = router_Action.Replace;
+      historyAction = Action.Replace;
     }
 
     let preventScrollReset = opts && "preventScrollReset" in opts ? opts.preventScrollReset === true : undefined;
@@ -2038,7 +2038,7 @@ function router_createRouter(init) {
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let loadingNavigation = opts && opts.overrideNavigation;
-    let matches = router_matchRoutes(routesToUse, location, basename); // Short circuit with a 404 on the root error boundary if we match nothing
+    let matches = matchRoutes(routesToUse, location, basename); // Short circuit with a 404 on the root error boundary if we match nothing
 
     if (!matches) {
       let error = getInternalRouterError(404, {
@@ -2202,7 +2202,7 @@ function router_createRouter(init) {
       // the pre-submission form location to try again
 
       if ((opts && opts.replace) !== true) {
-        pendingAction = router_Action.Push;
+        pendingAction = Action.Push;
       }
 
       return {
@@ -2396,7 +2396,7 @@ function router_createRouter(init) {
     if (fetchControllers.has(key)) abortFetcher(key);
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let normalizedPath = normalizeTo(state.location, state.matches, basename, future.v7_prependBasename, href, routeId, opts == null ? void 0 : opts.relative);
-    let matches = router_matchRoutes(routesToUse, normalizedPath, basename);
+    let matches = matchRoutes(routesToUse, normalizedPath, basename);
 
     if (!matches) {
       setFetcherError(key, routeId, getInternalRouterError(404, {
@@ -2510,7 +2510,7 @@ function router_createRouter(init) {
     let nextLocation = state.navigation.location || state.location;
     let revalidationRequest = createClientSideRequest(init.history, nextLocation, abortController.signal);
     let routesToUse = inFlightDataRoutes || dataRoutes;
-    let matches = state.navigation.state !== "idle" ? router_matchRoutes(routesToUse, state.navigation.location, basename) : state.matches;
+    let matches = state.navigation.state !== "idle" ? matchRoutes(routesToUse, state.navigation.location, basename) : state.matches;
     invariant(matches, "Didn't find any matches after fetcher action");
     let loadId = ++incrementingLoadId;
     fetchReloadIds.set(key, loadId);
@@ -2758,7 +2758,7 @@ function router_createRouter(init) {
 
 
     pendingNavigationController = null;
-    let redirectHistoryAction = replace === true ? router_Action.Replace : router_Action.Push; // Use the incoming submission if provided, fallback on the active one in
+    let redirectHistoryAction = replace === true ? Action.Replace : Action.Push; // Use the incoming submission if provided, fallback on the active one in
     // state.navigation
 
     let {
@@ -3169,7 +3169,7 @@ function createStaticHandler(routes, opts) {
     let url = new URL(request.url);
     let method = request.method;
     let location = createLocation("", router_createPath(url), null, "default");
-    let matches = router_matchRoutes(dataRoutes, location, basename); // SSR supports HEAD requests while SPA doesn't
+    let matches = matchRoutes(dataRoutes, location, basename); // SSR supports HEAD requests while SPA doesn't
 
     if (!isValidMethod(method) && method !== "HEAD") {
       let error = getInternalRouterError(405, {
@@ -3261,7 +3261,7 @@ function createStaticHandler(routes, opts) {
     let url = new URL(request.url);
     let method = request.method;
     let location = createLocation("", router_createPath(url), null, "default");
-    let matches = router_matchRoutes(dataRoutes, location, basename); // SSR supports HEAD requests while SPA doesn't
+    let matches = matchRoutes(dataRoutes, location, basename); // SSR supports HEAD requests while SPA doesn't
 
     if (!isValidMethod(method) && method !== "HEAD" && method !== "OPTIONS") {
       throw getInternalRouterError(405, {
@@ -3446,7 +3446,7 @@ function createStaticHandler(routes, opts) {
       }); // action status codes take precedence over loader status codes
 
       return router_extends({}, context, {
-        statusCode: router_isRouteErrorResponse(result.error) ? result.error.status : 500,
+        statusCode: isRouteErrorResponse(result.error) ? result.error.status : 500,
         actionData: null,
         actionHeaders: router_extends({}, result.headers ? {
           [actionMatch.route.id]: result.headers
@@ -3644,7 +3644,7 @@ function normalizeNavigateOptions(normalizeFormMethod, isFetcher, path, opts) {
   } // Flatten submission onto URLSearchParams for GET submissions
 
 
-  let parsedPath = router_parsePath(path);
+  let parsedPath = parsePath(path);
   let searchParams = convertFormDataToSearchParams(opts.formData); // On GET navigation submissions we can drop the ?index param from the
   // resulting location since all loaders will run.  But fetcher GET submissions
   // only run a single loader so we need to preserve any incoming ?index params
@@ -3725,7 +3725,7 @@ function getMatchesToLoad(history, state, matches, submission, location, isReval
       return;
     }
 
-    let fetcherMatches = router_matchRoutes(routesToUse, f.path, basename); // If the fetcher path no longer matches, push it in with null matches so
+    let fetcherMatches = matchRoutes(routesToUse, f.path, basename); // If the fetcher path no longer matches, push it in with null matches so
     // we can trigger a 404 in callLoadersAndMaybeResolveData
 
     if (!fetcherMatches) {
@@ -4126,7 +4126,7 @@ function processRouteLoaderData(matches, matchesToLoad, results, pendingError, a
 
       if (!foundError) {
         foundError = true;
-        statusCode = router_isRouteErrorResponse(result.error) ? result.error.status : 500;
+        statusCode = isRouteErrorResponse(result.error) ? result.error.status : 500;
       }
 
       if (result.headers) {
@@ -4321,7 +4321,7 @@ function findRedirect(results) {
 }
 
 function stripHashFromPath(path) {
-  let parsedPath = typeof path === "string" ? router_parsePath(path) : path;
+  let parsedPath = typeof path === "string" ? parsePath(path) : path;
   return router_createPath(router_extends({}, parsedPath, {
     hash: ""
   }));
@@ -4474,7 +4474,7 @@ function createUseMatchesMatch(match, loaderData) {
 }
 
 function getTargetMatch(matches, location) {
-  let search = typeof location === "string" ? router_parsePath(location).search : location.search;
+  let search = typeof location === "string" ? parsePath(location).search : location.search;
 
   if (matches[matches.length - 1].route.index && hasNakedIndexQuery(search || "")) {
     // Return the leaf index route when index is present
@@ -4522,11 +4522,11 @@ function dist_extends() {
   return dist_extends.apply(this, arguments);
 }
 
-const DataRouterContext = /*#__PURE__*/(/* unused pure expression or super */ null && (React.createContext(null)));
+const DataRouterContext = /*#__PURE__*/external_cgpv_react_.createContext(null);
 
 if (false) {}
 
-const DataRouterStateContext = /*#__PURE__*/(/* unused pure expression or super */ null && (React.createContext(null)));
+const DataRouterStateContext = /*#__PURE__*/external_cgpv_react_.createContext(null);
 
 if (false) {}
 
@@ -4550,7 +4550,7 @@ const RouteContext = /*#__PURE__*/external_cgpv_react_.createContext({
 
 if (false) {}
 
-const RouteErrorContext = /*#__PURE__*/(/* unused pure expression or super */ null && (React.createContext(null)));
+const RouteErrorContext = /*#__PURE__*/external_cgpv_react_.createContext(null);
 
 if (false) {}
 
@@ -4613,8 +4613,8 @@ function useInRouterContext() {
  */
 
 function dist_useLocation() {
-  !useInRouterContext() ?  false ? 0 : UNSAFE_invariant(false) : void 0;
-  return React.useContext(LocationContext).location;
+  !useInRouterContext() ?  false ? 0 : invariant(false) : void 0;
+  return external_cgpv_react_.useContext(LocationContext).location;
 }
 /**
  * Returns the current navigation action which describes how the router came to
@@ -4798,13 +4798,13 @@ function useRoutes(routes, locationArg) {
 } // Internal implementation with accept optional param for RouterProvider usage
 
 function useRoutesImpl(routes, locationArg, dataRouterState) {
-  !useInRouterContext() ?  false ? 0 : UNSAFE_invariant(false) : void 0;
+  !useInRouterContext() ?  false ? 0 : invariant(false) : void 0;
   let {
     navigator
-  } = React.useContext(NavigationContext);
+  } = external_cgpv_react_.useContext(NavigationContext);
   let {
     matches: parentMatches
-  } = React.useContext(RouteContext);
+  } = external_cgpv_react_.useContext(RouteContext);
   let routeMatch = parentMatches[parentMatches.length - 1];
   let parentParams = routeMatch ? routeMatch.params : {};
   let parentPathname = routeMatch ? routeMatch.pathname : "/";
@@ -4820,7 +4820,7 @@ function useRoutesImpl(routes, locationArg, dataRouterState) {
     var _parsedLocationArg$pa;
 
     let parsedLocationArg = typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
-    !(parentPathnameBase === "/" || ((_parsedLocationArg$pa = parsedLocationArg.pathname) == null ? void 0 : _parsedLocationArg$pa.startsWith(parentPathnameBase))) ?  false ? 0 : UNSAFE_invariant(false) : void 0;
+    !(parentPathnameBase === "/" || ((_parsedLocationArg$pa = parsedLocationArg.pathname) == null ? void 0 : _parsedLocationArg$pa.startsWith(parentPathnameBase))) ?  false ? 0 : invariant(false) : void 0;
     location = parsedLocationArg;
   } else {
     location = locationFromContext;
@@ -4836,9 +4836,9 @@ function useRoutesImpl(routes, locationArg, dataRouterState) {
 
   let renderedMatches = _renderMatches(matches && matches.map(match => Object.assign({}, match, {
     params: Object.assign({}, parentParams, match.params),
-    pathname: joinPaths([parentPathnameBase, // Re-encode pathnames that were decoded inside matchRoutes
+    pathname: router_joinPaths([parentPathnameBase, // Re-encode pathnames that were decoded inside matchRoutes
     navigator.encodeLocation ? navigator.encodeLocation(match.pathname).pathname : match.pathname]),
-    pathnameBase: match.pathnameBase === "/" ? parentPathnameBase : joinPaths([parentPathnameBase, // Re-encode pathnames that were decoded inside matchRoutes
+    pathnameBase: match.pathnameBase === "/" ? parentPathnameBase : router_joinPaths([parentPathnameBase, // Re-encode pathnames that were decoded inside matchRoutes
     navigator.encodeLocation ? navigator.encodeLocation(match.pathnameBase).pathname : match.pathnameBase])
   })), parentMatches, dataRouterState); // When a user passes in a `locationArg`, the associated routes need to
   // be wrapped in a new `LocationContext.Provider` in order for `useLocation`
@@ -4846,7 +4846,7 @@ function useRoutesImpl(routes, locationArg, dataRouterState) {
 
 
   if (locationArg && renderedMatches) {
-    return /*#__PURE__*/React.createElement(LocationContext.Provider, {
+    return /*#__PURE__*/external_cgpv_react_.createElement(LocationContext.Provider, {
       value: {
         location: dist_extends({
           pathname: "/",
@@ -4880,16 +4880,16 @@ function DefaultErrorComponent() {
 
   if (false) {}
 
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", null, "Unexpected Application Error!"), /*#__PURE__*/React.createElement("h3", {
+  return /*#__PURE__*/external_cgpv_react_.createElement(external_cgpv_react_.Fragment, null, /*#__PURE__*/external_cgpv_react_.createElement("h2", null, "Unexpected Application Error!"), /*#__PURE__*/external_cgpv_react_.createElement("h3", {
     style: {
       fontStyle: "italic"
     }
-  }, message), stack ? /*#__PURE__*/React.createElement("pre", {
+  }, message), stack ? /*#__PURE__*/external_cgpv_react_.createElement("pre", {
     style: preStyles
   }, stack) : null, devInfo);
 }
 
-const defaultErrorElement = /*#__PURE__*/(/* unused pure expression or super */ null && (React.createElement(DefaultErrorComponent, null)));
+const defaultErrorElement = /*#__PURE__*/external_cgpv_react_.createElement(DefaultErrorComponent, null);
 class RenderErrorBoundary extends external_cgpv_react_.Component {
   constructor(props) {
     super(props);
@@ -4939,9 +4939,9 @@ class RenderErrorBoundary extends external_cgpv_react_.Component {
   }
 
   render() {
-    return this.state.error ? /*#__PURE__*/React.createElement(RouteContext.Provider, {
+    return this.state.error ? /*#__PURE__*/external_cgpv_react_.createElement(RouteContext.Provider, {
       value: this.props.routeContext
-    }, /*#__PURE__*/React.createElement(RouteErrorContext.Provider, {
+    }, /*#__PURE__*/external_cgpv_react_.createElement(RouteErrorContext.Provider, {
       value: this.state.error,
       children: this.props.component
     })) : this.props.children;
@@ -4955,14 +4955,14 @@ function RenderedRoute(_ref) {
     match,
     children
   } = _ref;
-  let dataRouterContext = React.useContext(DataRouterContext); // Track how deep we got in our render pass to emulate SSR componentDidCatch
+  let dataRouterContext = external_cgpv_react_.useContext(DataRouterContext); // Track how deep we got in our render pass to emulate SSR componentDidCatch
   // in a DataStaticRouter
 
   if (dataRouterContext && dataRouterContext.static && dataRouterContext.staticContext && (match.route.errorElement || match.route.ErrorBoundary)) {
     dataRouterContext.staticContext._deepestRenderedBoundaryId = match.route.id;
   }
 
-  return /*#__PURE__*/React.createElement(RouteContext.Provider, {
+  return /*#__PURE__*/external_cgpv_react_.createElement(RouteContext.Provider, {
     value: routeContext
   }, children);
 }
@@ -4996,7 +4996,7 @@ function _renderMatches(matches, parentMatches, dataRouterState) {
 
   if (errors != null) {
     let errorIndex = renderedMatches.findIndex(m => m.route.id && (errors == null ? void 0 : errors[m.route.id]));
-    !(errorIndex >= 0) ?  false ? 0 : UNSAFE_invariant(false) : void 0;
+    !(errorIndex >= 0) ?  false ? 0 : invariant(false) : void 0;
     renderedMatches = renderedMatches.slice(0, Math.min(renderedMatches.length, errorIndex + 1));
   }
 
@@ -5023,14 +5023,14 @@ function _renderMatches(matches, parentMatches, dataRouterState) {
         // `<Route Component={...}>` in `<Routes>` but generally `Component`
         // usage is only advised in `RouterProvider` when we can convert it to
         // `element` ahead of time.
-        children = /*#__PURE__*/React.createElement(match.route.Component, null);
+        children = /*#__PURE__*/external_cgpv_react_.createElement(match.route.Component, null);
       } else if (match.route.element) {
         children = match.route.element;
       } else {
         children = outlet;
       }
 
-      return /*#__PURE__*/React.createElement(RenderedRoute, {
+      return /*#__PURE__*/external_cgpv_react_.createElement(RenderedRoute, {
         match: match,
         routeContext: {
           outlet,
@@ -5044,7 +5044,7 @@ function _renderMatches(matches, parentMatches, dataRouterState) {
     // an ancestor ErrorBoundary/errorElement
 
 
-    return dataRouterState && (match.route.ErrorBoundary || match.route.errorElement || index === 0) ? /*#__PURE__*/React.createElement(RenderErrorBoundary, {
+    return dataRouterState && (match.route.ErrorBoundary || match.route.errorElement || index === 0) ? /*#__PURE__*/external_cgpv_react_.createElement(RenderErrorBoundary, {
       location: dataRouterState.location,
       revalidation: dataRouterState.revalidation,
       component: errorElement,
@@ -5092,14 +5092,14 @@ function useDataRouterContext(hookName) {
 }
 
 function useDataRouterState(hookName) {
-  let state = React.useContext(DataRouterStateContext);
-  !state ?  false ? 0 : UNSAFE_invariant(false) : void 0;
+  let state = external_cgpv_react_.useContext(DataRouterStateContext);
+  !state ?  false ? 0 : invariant(false) : void 0;
   return state;
 }
 
 function useRouteContext(hookName) {
-  let route = React.useContext(RouteContext);
-  !route ?  false ? 0 : UNSAFE_invariant(false) : void 0;
+  let route = external_cgpv_react_.useContext(RouteContext);
+  !route ?  false ? 0 : invariant(false) : void 0;
   return route;
 } // Internal version with hookName-aware debugging
 
@@ -5107,7 +5107,7 @@ function useRouteContext(hookName) {
 function useCurrentRouteId(hookName) {
   let route = useRouteContext(hookName);
   let thisRoute = route.matches[route.matches.length - 1];
-  !thisRoute.route.id ?  false ? 0 : UNSAFE_invariant(false) : void 0;
+  !thisRoute.route.id ?  false ? 0 : invariant(false) : void 0;
   return thisRoute.route.id;
 }
 /**
@@ -5209,7 +5209,7 @@ function useActionData() {
 function useRouteError() {
   var _state$errors;
 
-  let error = React.useContext(RouteErrorContext);
+  let error = external_cgpv_react_.useContext(RouteErrorContext);
   let state = useDataRouterState(DataRouterStateHook.UseRouteError);
   let routeId = useCurrentRouteId(DataRouterStateHook.UseRouteError); // If this was a render error, we put it in a RouteError context inside
   // of RenderErrorBoundary
@@ -5458,7 +5458,7 @@ function Outlet(props) {
  * @see https://reactrouter.com/components/route
  */
 function Route(_props) {
-   false ? 0 : UNSAFE_invariant(false) ;
+   false ? 0 : invariant(false) ;
 }
 
 /**
@@ -5475,7 +5475,7 @@ function dist_Router(_ref5) {
     basename: basenameProp = "/",
     children = null,
     location: locationProp,
-    navigationType = router_Action.Pop,
+    navigationType = Action.Pop,
     navigator,
     static: staticProp = false
   } = _ref5;
@@ -5490,7 +5490,7 @@ function dist_Router(_ref5) {
   }), [basename, navigator, staticProp]);
 
   if (typeof locationProp === "string") {
-    locationProp = router_parsePath(locationProp);
+    locationProp = parsePath(locationProp);
   }
 
   let {
@@ -5700,8 +5700,8 @@ function createRoutesFromChildren(children, parentPath) {
   }
 
   let routes = [];
-  React.Children.forEach(children, (element, index) => {
-    if (! /*#__PURE__*/React.isValidElement(element)) {
+  external_cgpv_react_.Children.forEach(children, (element, index) => {
+    if (! /*#__PURE__*/external_cgpv_react_.isValidElement(element)) {
       // Ignore non-elements. This allows people to more easily inline
       // conditionals in their route config.
       return;
@@ -5709,14 +5709,14 @@ function createRoutesFromChildren(children, parentPath) {
 
     let treePath = [...parentPath, index];
 
-    if (element.type === React.Fragment) {
+    if (element.type === external_cgpv_react_.Fragment) {
       // Transparently support React.Fragment and its children.
       routes.push.apply(routes, createRoutesFromChildren(element.props.children, treePath));
       return;
     }
 
-    !(element.type === Route) ?  false ? 0 : UNSAFE_invariant(false) : void 0;
-    !(!element.props.index || !element.props.children) ?  false ? 0 : UNSAFE_invariant(false) : void 0;
+    !(element.type === Route) ?  false ? 0 : invariant(false) : void 0;
+    !(!element.props.index || !element.props.children) ?  false ? 0 : invariant(false) : void 0;
     let route = {
       id: element.props.id || treePath.join("-"),
       caseSensitive: element.props.caseSensitive,
@@ -11518,7 +11518,7 @@ var App = function () {
 
 
 var container = document.getElementById('root');
-(0,external_cgpv_reactDOM_namespaceObject.render)((0,jsx_runtime.jsx)(BrowserRouter, { children: (0,jsx_runtime.jsx)(app, {}) }), container);
+(0,external_cgpv_reactDOM_namespaceObject.render)((0,jsx_runtime.jsx)(BrowserRouter, { children: (0,jsx_runtime.jsx)(Routes, { children: (0,jsx_runtime.jsx)(Route, { path: '/', element: (0,jsx_runtime.jsx)(app, {}) }) }) }), container);
 
 })();
 
