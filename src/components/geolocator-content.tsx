@@ -1,5 +1,4 @@
 import { TypeButtonPanel, TypeWindow } from 'geoview-core-types';
-import { useLocation, BrowserRouter  } from 'react-router-dom';
 import { useState } from 'react';
 
 const w = window as TypeWindow;
@@ -75,7 +74,7 @@ export const GeolocatorPanelContent = (props: GeolocatorPanelContentProps): JSX.
   }
 
   return (
-    <><BrowserRouter>
+    <>
       <label htmlFor="filter">Search filter</label>
       <TextField id="filter" type="text" onChange={(e: any) => setQuery(e.target.value)} />
       <div style={{ display: 'grid', padding: '10px' }}>
@@ -123,8 +122,7 @@ export const GeolocatorPanelContent = (props: GeolocatorPanelContentProps): JSX.
             </div>
           );
         })}
-      </List>
-      </BrowserRouter>
+      </List>  
     </>
   );
 };
